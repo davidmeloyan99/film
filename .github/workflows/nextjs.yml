@@ -2,25 +2,25 @@ name: Deploy Next.js site to Pages
 
 on:
   push:
-    branches: ["main"]  # Trigger deployment on pushes to the main branch
-  workflow_dispatch:  # Allow manual triggering of the workflow
+    branches: ["main"]
+  workflow_dispatch:
 
 permissions:
-  contents: read  # Allow reading the repository's content
-  pages: write    # Allow writing to GitHub Pages
-  id-token: write  # Allow using ID tokens for deployments
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: "pages"  # Grouping for concurrency
-  cancel-in-progress: false  # Do not cancel ongoing deployments
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # Specify the environment for the job
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4  # Checkout the repository
-      
+        uses: actions/checkout@v4
+
       - name: Detect package manager
         id: detect-package-manager
         run: |
@@ -38,47 +38,47 @@ jobs:
             echo "Unable to determine package manager"
             exit 1
           fi
-      
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"  # Specify the Node.js version
-          cache: ${{ steps.detect-package-manager.outputs.manager }}  # Cache dependencies
+          node-version: "20"
+          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
-          static_site_generator: next  # Specify Next.js as the static site generator
-      
+          static_site_generator: next
+
       - name: Restore cache
         uses: actions/cache@v4
         with:
           path: |
-            .next/cache  # Cache for Next.js
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}  # Cache key
+            .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
           restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-  # Restore previous caches
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
 
       - name: Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}  # Install dependencies
+        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
 
       - name: Build with Next.js
-        run: ${{ steps.detect-package-manager.outputs.runner }} next export  # Build the Next.js app
-      
+        run: ${{ steps.detect-package-manager.outputs.runner }} next build
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: out  # Specify the output directory for the built site
+          path: out  # Ensure this matches your output directory
 
   deploy:
     environment:
-      name: github-pages  # Set the environment for the deployment
-      url: ${{ steps.deployment.outputs.page_url }}  # Output URL for the deployed site
-    runs-on: ubuntu-latest  # Specify the environment for the deployment job
-    needs: build  # Ensure build job completes before this job runs
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
         with:
-          artifact-path: out  # Path to the built artifact
+          artifact-path: out  # Ensure this matches your output directory
